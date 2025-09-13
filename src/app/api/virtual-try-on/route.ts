@@ -4,7 +4,6 @@ import { createClient } from "@supabase/supabase-js";
 // Configuration
 const GEMINI_API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent";
-const MAX_FREE_GENERATIONS = 15;
 
 interface TryOnRequest {
   userImageUrl: string;
@@ -95,30 +94,47 @@ export async function POST(request: NextRequest) {
 
     const userId = user.id;
 
-    // Check user's generation count
-    const { data: existingGenerations, error: countError } = await supabase
-      .from("virtual_try_on_generations")
-      .select("id")
-      .eq("user_id", userId);
+    // Check user's plan and generation limits using the new database schema
+    const { data: planInfo, error: planError } = await supabase.rpc(
+      "get_user_plan_info",
+      { p_user_id: userId }
+    );
 
-    if (countError) {
-      console.error("Error checking generation count:", countError);
+    if (planError) {
+      console.error("Error checking plan info:", planError);
       return NextResponse.json(
         { error: "Failed to check generation limit" },
         { status: 500 }
       );
     }
 
-    const generationCount = existingGenerations?.length || 0;
+    console.log("Plan info:", planInfo);
 
-    // Check if user has exceeded free limit
-    if (generationCount >= MAX_FREE_GENERATIONS) {
+    const userPlan = planInfo?.[0] || {
+      plan_type: "free",
+      status: "free",
+      monthly_limit: 15,
+      current_count: 0,
+      remaining_generations: 15,
+      subscription_active: false,
+    };
+
+    // Check if user has exceeded their plan limit
+    if (userPlan.remaining_generations <= 0) {
       return NextResponse.json(
         {
           error: "Generation limit exceeded",
-          message: `You have reached the limit of ${MAX_FREE_GENERATIONS} free generations. Please upgrade to continue.`,
-          generationCount,
-          maxGenerations: MAX_FREE_GENERATIONS,
+          message: `You have reached your monthly limit of ${
+            userPlan.monthly_limit
+          } generations. ${
+            userPlan.plan_type === "free"
+              ? "Please upgrade to Pro for 200 monthly generations."
+              : "Your Pro limit will reset next month."
+          }`,
+          generationCount: userPlan.current_count,
+          maxGenerations: userPlan.monthly_limit,
+          remainingGenerations: 0,
+          planType: userPlan.plan_type,
         },
         { status: 402 } // Payment Required
       );
@@ -263,7 +279,7 @@ export async function POST(request: NextRequest) {
     const fileName = `virtual-try-on-${userId}-${timestamp}.${fileExtension}`;
 
     // Upload generated image to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from("virtual-try-on-generations")
       .upload(fileName, imageBuffer, {
         contentType: imageMimeType,
@@ -284,7 +300,33 @@ export async function POST(request: NextRequest) {
       .from("virtual-try-on-generations")
       .getPublicUrl(fileName);
 
-    // Save generation record to database
+    // Record the generation using the new tracking system
+    const { error: recordError } = await supabase.rpc(
+      "record_user_generation",
+      {
+        p_user_id: userId,
+        p_generation_type: "virtual_tryon",
+        p_metadata: {
+          user_image_url: userImageUrl,
+          clothing_image_url: clothingImageUrl,
+          generated_image_url: publicUrlData.publicUrl,
+          clothing_name: clothingName,
+        },
+      }
+    );
+
+    if (recordError) {
+      console.error("Error recording generation:", recordError);
+      return NextResponse.json(
+        {
+          error:
+            "Failed to record generation. You may have exceeded your limit.",
+        },
+        { status: 402 }
+      );
+    }
+
+    // Also save to the legacy table for backward compatibility
     const generationRecord: Omit<GenerationRecord, "id" | "created_at"> = {
       user_id: userId,
       user_image_url: userImageUrl,
@@ -300,9 +342,16 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error("Error saving generation record:", insertError);
-      // Still return success since the image was generated, just log the error
+      console.error("Error saving legacy generation record:", insertError);
+      // Don't fail if legacy insert fails, but log it
     }
+
+    // Get updated plan info after recording the generation
+    const { data: updatedPlanInfo } = await supabase.rpc("get_user_plan_info", {
+      p_user_id: userId,
+    });
+
+    const updatedPlan = updatedPlanInfo?.[0] || userPlan;
 
     // Return success response
     return NextResponse.json({
@@ -311,11 +360,10 @@ export async function POST(request: NextRequest) {
         generatedImageUrl: publicUrlData.publicUrl,
         generatedImageBase64: imageBase64,
         generationId: insertData?.id,
-        generationCount: generationCount + 1,
-        remainingGenerations: Math.max(
-          0,
-          MAX_FREE_GENERATIONS - generationCount - 1
-        ),
+        generationCount: updatedPlan.current_count,
+        remainingGenerations: updatedPlan.remaining_generations,
+        monthlyLimit: updatedPlan.monthly_limit,
+        planType: updatedPlan.plan_type,
       },
       message: "Virtual try-on generated successfully",
     });
@@ -373,7 +421,30 @@ export async function GET(request: NextRequest) {
 
     const userId = user.id;
 
-    // Get user's generation history
+    // Get user's plan info and generation stats using the new system
+    const { data: planInfo, error: planError } = await supabase.rpc(
+      "get_user_plan_info",
+      { p_user_id: userId }
+    );
+
+    if (planError) {
+      console.error("Error checking plan info:", planError);
+      return NextResponse.json(
+        { error: "Failed to check generation limit" },
+        { status: 500 }
+      );
+    }
+
+    const userPlan = planInfo?.[0] || {
+      plan_type: "free",
+      status: "free",
+      monthly_limit: 15,
+      current_count: 0,
+      remaining_generations: 15,
+      subscription_active: false,
+    };
+
+    // Get user's generation history from legacy table for display
     const { data: generations, error: fetchError } = await supabase
       .from("virtual_try_on_generations")
       .select("*")
@@ -388,20 +459,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const generationCount = generations?.length || 0;
-    const remainingGenerations = Math.max(
-      0,
-      MAX_FREE_GENERATIONS - generationCount
-    );
-
     return NextResponse.json({
       success: true,
       data: {
         generations: generations || [],
-        generationCount,
-        maxGenerations: MAX_FREE_GENERATIONS,
-        remainingGenerations,
-        hasReachedLimit: generationCount >= MAX_FREE_GENERATIONS,
+        generationCount: userPlan.current_count,
+        maxGenerations: userPlan.monthly_limit,
+        remainingGenerations: userPlan.remaining_generations,
+        hasReachedLimit: userPlan.remaining_generations <= 0,
+        planType: userPlan.plan_type,
+        subscriptionActive: userPlan.subscription_active,
       },
     });
   } catch (error) {
