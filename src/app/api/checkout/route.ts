@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: "subscription",
-      success_url: `https://80f340314e49.ngrok-free.app/success`,
-      cancel_url: `https://80f340314e49.ngrok-free.app/cancel`,
+      success_url: `https://drippler-web.vercel.app/success`,
+      cancel_url: `https://drippler-web.vercel.app/cancel`,
     });
 
     return NextResponse.json({ url: session.url });
