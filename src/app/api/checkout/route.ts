@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
               name: "Drippler Pro",
               description: "200 virtual clothing try-on generations per month",
             },
-            unit_amount: 999,
+            unit_amount: Number(process.env.STRIPE_PRO_PRICE) || 1499,
             recurring: {
               interval: "month",
             },
