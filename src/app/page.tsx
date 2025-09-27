@@ -101,7 +101,7 @@ export default function Home() {
         {/* Hidden Video Preloader */}
         <iframe
           className="absolute -top-[9999px] left-0 w-0 h-0 opacity-0 pointer-events-none"
-          src="https://www.youtube.com/embed/3oA8kt8685I?rel=0&modestbranding=1"
+          src="https://www.youtube.com/embed/5et54rIiCY0?rel=0&modestbranding=1"
           title="Video Preloader"
           tabIndex={-1}
         />
@@ -127,7 +127,7 @@ export default function Home() {
               {/* YouTube Video */}
               <iframe
                 className="w-full h-full"
-                src="https://www.youtube.com/embed/3oA8kt8685I?autoplay=1&rel=0&modestbranding=1"
+                src="https://www.youtube.com/embed/5et54rIiCY0?autoplay=1&rel=0&modestbranding=1"
                 title="Drippler Demo Video"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
