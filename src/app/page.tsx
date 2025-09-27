@@ -98,6 +98,14 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Hidden Video Preloader */}
+        <iframe
+          className="absolute -top-[9999px] left-0 w-0 h-0 opacity-0 pointer-events-none"
+          src="https://www.youtube.com/embed/3oA8kt8685I?rel=0&modestbranding=1"
+          title="Video Preloader"
+          tabIndex={-1}
+        />
+
         {/* Video Modal */}
         {isVideoModalOpen && (
           <div
