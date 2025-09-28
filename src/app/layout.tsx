@@ -18,15 +18,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Drippler Extension - Web Authentication",
-  description: "Secure authentication flows for the Drippler Chrome Extension",
-  keywords: [
-    "chrome extension",
-    "authentication",
-    "password reset",
-    "email verification",
-  ],
-  authors: [{ name: "Drippler Team" }],
+  title: "Drippler",
+  description: "Digital Wardrobe",
+  keywords: ["chrome extension", "digital wardrobe", "fashion"],
   viewport: "width=device-width, initial-scale=1",
 };
 
