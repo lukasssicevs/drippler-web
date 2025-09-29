@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { GoogleAnalytics } from '@next/third-parties/google';
 import {
   XLogoIcon,
   InstagramLogoIcon,
   PinterestLogoIcon,
   TiktokLogoIcon,
   YoutubeLogoIcon,
-  GoogleChromeLogoIcon,
 } from "@phosphor-icons/react/ssr";
 import DripIcon from "@/assets/drip.svg";
 import Header from "@/components/Header";
+import FooterDownloadButton from "@/components/FooterDownloadButton";
 import "./globals.css";
 
 const inter = Inter({
@@ -32,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} bg-neutral-950`}>
       <body className="font-sans antialiased min-h-screen relative bg-gradient-to-b from-neutral-950 to-fuchsia-950">
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ''} />
         <Header />
 
         {/* Main Content */}
@@ -56,20 +58,7 @@ export default function RootLayout({
                 Privacy Policy
               </a>
               {/* Download button - hidden on mobile */}
-              <a
-                href="https://chromewebstore.google.com/detail/drippler-extension/gefbchjonjigmadmmfppgckjimhepapj?authuser=0&hl=lv"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden md:flex h-9 md:h-11 px-3 md:px-4 py-2 rounded-[10px] border border-purple-500/60 items-center gap-2 hover:border-purple-400 transition-colors group"
-              >
-                <GoogleChromeLogoIcon
-                  size={20}
-                  className="text-purple-500/60 group-hover:text-purple-400 transition-colors md:w-6 md:h-6"
-                />
-                <div className="text-purple-500/60 text-sm md:text-base font-normal font-['Inter'] group-hover:text-purple-400 transition-colors">
-                  Download Extension
-                </div>
-              </a>
+              <FooterDownloadButton />
             </div>
 
             {/* Right - Social icons */}

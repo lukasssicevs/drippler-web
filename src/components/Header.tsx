@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { GoogleChromeLogoIcon } from "@phosphor-icons/react/ssr";
+import { sendGAEvent } from '@next/third-parties/google';
 
 export default function Header() {
   const pathname = usePathname();
@@ -78,6 +79,7 @@ export default function Header() {
                 href="https://chromewebstore.google.com/detail/drippler-extension/gefbchjonjigmadmmfppgckjimhepapj?authuser=0&hl=lv"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => sendGAEvent('event', 'download_extension', { location: 'header' })}
                 className="px-3 py-2 lg:px-4 lg:py-2 bg-purple-500/25 rounded-[10px] outline outline-1 outline-offset-[-1px] outline-purple-500 inline-flex justify-center items-center gap-2 hover:bg-purple-500/35 transition-colors"
               >
                 <GoogleChromeLogoIcon
