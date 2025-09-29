@@ -229,7 +229,7 @@ export default function PrivacyPolicyPage() {
                       href="mailto:privacy@drippler.com"
                       className="text-violet-300 hover:text-violet-200 transition-colors underline underline-offset-2"
                     >
-                      drippler.support@gmail.com
+                      drippler.xyz@gmail.com
                     </a>
                   </p>
                 </div>

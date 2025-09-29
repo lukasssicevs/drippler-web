@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { GoogleAnalytics } from '@next/third-parties/google';
+import { GoogleAnalytics } from "@next/third-parties/google";
 import {
   XLogoIcon,
   InstagramLogoIcon,
@@ -33,7 +33,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} bg-neutral-950`}>
       <body className="font-sans antialiased min-h-screen relative bg-gradient-to-b from-neutral-950 to-fuchsia-950">
-        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ''} />
+        <GoogleAnalytics
+          gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ""}
+        />
         <Header />
 
         {/* Main Content */}
@@ -80,7 +82,7 @@ export default function RootLayout({
                 <InstagramLogoIcon size={20} className="md:w-8 md:h-8" />
               </a>
               <a
-                href="https://www.tiktok.com/@drippler.xyz"
+                href="https://www.tiktok.com/@drippler_xyz"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-purple-500/60 hover:text-purple-400 transition-colors"
