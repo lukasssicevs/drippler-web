@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       mode: "subscription",
       success_url: `https://drippler-web.vercel.app/success`,
       cancel_url: `https://drippler-web.vercel.app/cancel`,
+      allow_promotion_codes: true,
     });
 
     return NextResponse.json({ url: session.url });
